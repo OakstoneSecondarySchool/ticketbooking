@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ticket Booking — Standard & VIP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #9aa4b2;
+      --accent: linear-gradient(135deg,#6ee7b7,#60a5fa);
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.04);
+      --success: #10b981;
+      --danger: #ef4444;
+      --shadow: 0 10px 25px rgba(2,6,23,0.6);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:0;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(96,165,250,0.06), transparent 6%),
+                  radial-gradient(900px 300px at 90% 90%, rgba(110,231,183,0.04), transparent 6%),
+                  var(--bg);
+      color: #e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:32px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      gap:20px;
+    }
+
+    .container{
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:24px;
+      align-items:start;
+    }
+
+    header{
+      grid-column:1/-1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      margin-bottom:8px;
+    }
+
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .logo{
+      width:56px;height:56px;border-radius:12px;
+      background:linear-gradient(135deg,#60a5fa,#6ee7b7);
+      display:flex;align-items:center;justify-content:center;
+      color:#05263a;font-weight:800;font-size:18px;box-shadow:var(--shadow);
+    }
+    h1{margin:0;font-size:20px;letter-spacing:-0.2px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    /* Left main area */
+    .main{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:14px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      min-height:520px;
+    }
+
+    .tickets-grid{
+      display:flex;
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .ticket-card{
+      flex:1;
+      background:var(--glass);
+      border-radius:12px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      transition:transform .25s, box-shadow .25s;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .ticket-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(2,6,23,0.6)}
+    .ticket-type{display:flex;justify-content:space-between;align-items:center}
+    .ticket-type h2{margin:0;font-size:18px}
+    .price{font-weight:800;font-size:22px}
+    .features{font-size:13px;color:var(--muted);line-height:1.6}
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      border:0;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;
+      background:transparent;color:inherit;
+    }
+    .btn-primary{
+      background:var(--accent); color:#05263a; box-shadow:0 8px 18px rgba(60,120,180,0.12);
+    }
+    .btn-ghost{
+      border:1px solid rgba(255,255,255,0.04); background:transparent;
+    }
+    .mute{color:var(--muted);font-size:13px}
+
+    /* Right sidebar (admin & summary) */
+    .sidebar{
+      background:var(--card);
+      border-radius:12px;padding:18px;min-height:420px;box-shadow:var(--shadow);
+      display:flex;flex-direction:column;gap:14px;
+    }
+    .small{
+      font-size:13px;color:var(--muted)
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px;
+      background:rgba(255,255,255,0.03)
+    }
+    .admin-btn{
+      margin-left:auto;
+      background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700;
+    }
+
+    /* Modal — DARKER BACKDROP & CARD + X close button */
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(2,6,23,0.8);display:flex;align-items:center;justify-content:center;
+      z-index:50;
+    }
+    .modal{
+      width:100%;max-width:520px;background:rgba(15,23,42,0.95);
+      border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);
+      box-shadow:0 30px 70px rgba(2,6,23,0.7);
+      position:relative;
+    }
+    .modal-close-x{
+      position:absolute;
+      right:10px;
+      top:10px;
+      background:transparent;
+      border:0;
+      color:var(--muted);
+      font-weight:800;
+      font-size:18px;
+      width:34px;
+      height:34px;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    .modal-close-x:focus{outline:2px solid rgba(96,165,250,0.25)}
+    .form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    label{font-size:13px;color:var(--muted)}
+    input[type="text"], input[type="password"]{
+      background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:inherit;
+    }
+    .muted-note{font-size:12px;color:var(--muted)}
+
+    /* admin area */
+    .tabs{display:flex;gap:8px;margin-bottom:14px}
+    .tab{padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700;background:transparent;border:1px solid rgba(255,255,255,0.03)}
+    .tab.active{background:var(--glass-2)}
+    ul.list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+    li.item{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .meta{font-size:13px;color:var(--muted)}
+
+    /* sold-out overlay */
+    .soldout{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(239,68,68,0.1);color:var(--danger);font-weight:700;
+    }
+
+    /* responsive */
+    @media (max-width:980px){
+      .container{grid-template-columns:1fr; padding-bottom:40px}
+      .sidebar{order:2}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden>OSS</div>
+        <div>
+          <h1>Open Shop Tickets</h1>
+          <p class="lead">Pick a ticket type and complete the form to reserve your spot.</p>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="badge" id="vip-count-badge">VIP 0/10</div>
+        <button class="admin-btn" id="open-admin">Administrator Login</button>
+      </div>
+    </header>
+
+    <!-- Left: Ticket selection + flow -->
+    <main class="main" aria-label="Ticket booking area">
+      <section>
+        <h2 style="margin:0 0 12px 0">Choose your ticket</h2>
+        <div class="tickets-grid" role="list">
+          <div class="ticket-card" role="listitem" id="standard-card">
+            <div class="ticket-type">
+              <h2>Standard</h2>
+              <div class="price">Free</div>
+            </div>
+            <div class="features">
+              <ul style="margin:8px 0 0 18px;padding:0">
+                <li>General access</li>
+                <li>Standard in-game items</li>
+                <li>Community channels</li>
+              </ul>
+            </div>
+            <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
+              <div class="mute">No limit</div>
+              <button class="btn btn-primary" id="choose-standard" aria-haspopup="dialog">Select Standard</button>
+            </div>
+          </div>
+
+          <div class="ticket-card" role="listitem" id="vip-card">
+            <div class="ticket-type">
+              <h2>VIP</h2>
+              <div class="price">Premium</div>
+            </div>
+            <div class="features">
+              <ul style="margin:8px 0 0 18px;padding:0">
+                <li>Priority access</li>
+                <li>Exclusive items & perks</li>
+                <li>VIP-only Discord channel</li>
+              </ul>
+            </div>
+            <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
+              <div id="vip-space" class="mute">Limited — 10 seats</div>
+              <button class="btn btn-primary" id="choose-vip" aria-haspopup="dialog">Select VIP</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-top:20px;">
+        <h3 style="margin:0 0 8px 0">How it works</h3>
+        <p class="small" style="margin:0">Click a ticket, fill your Roleplay Name, ROBLOX username and Discord username. Submissions are saved locally in your browser. Administrators can view ticket lists from the Admin Login.</p>
+      </section>
+    </main>
+
+    <!-- Right: Sidebar -->
+    <aside class="sidebar" aria-label="Summary and admin">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div>
+          <div style="font-weight:800">Event Progress</div>
+          <div class="small">VIP seats limited — Standard always available</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="flex:1">
+          <div class="small">VIP Sales</div>
+          <div style="font-size:22px;font-weight:800" id="vip-count">0 / 10</div>
+        </div>
+        <div style="flex:1">
+          <div class="small">Standard Sales</div>
+          <div style="font-size:22px;font-weight:800" id="standard-count">0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:6px">
+        <div class="small">Latest activity</div>
+        <div id="activity" style="min-height:80px;color:var(--muted);font-size:13px;margin-top:8px">No bookings yet.</div>
+      </div>
+
+      <div style="margin-top:auto">
+        <div class="small">Admin</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button id="open-admin-2" class="btn btn-ghost">Administrator Login</button>
+          <button id="clear-storage" class="btn btn-ghost" title="Clear all stored tickets">Reset Data</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Modals (hidden by default) -->
+  <div id="modal-root" aria-live="polite"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      /*****************************************
+       * Client-side ticket booking app
+       *****************************************/
+      const STORAGE_KEY = 'oss_tickets_v1';
+      const VIP_LIMIT = 10;
+      const ADMIN_USER = 'OSSAdmin2025';
+      const ADMIN_PASS = 'OSSAdmin2025';
+
+      // Utilities
+      const $ = (s, el=document) => el.querySelector(s);
+      const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+      function saveData(data){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+      function loadData(){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(!raw) return { vip: [], standard: [] };
+          return JSON.parse(raw);
+        } catch(e){ return { vip: [], standard: [] }; }
+      }
+      function formatEntry(e){ return `${e.roleplay} — Roblox: ${e.roblox} — Discord: ${e.discord}` }
+
+      // Small debounce to prevent accidental double clicks
+      function withTempDisable(button, ms = 800){
+        if(!button) return;
+        if(button.disabled) return false;
+        button.disabled = true;
+        setTimeout(()=> button.disabled = false, ms);
+        return true;
+      }
+
+      // Accessibility: allow Enter/Space on ticket cards to activate the main button
+      function makeCardKeyboardFriendly(cardSelector, buttonSelector){
+        const card = document.getElementById(cardSelector);
+        const btn = document.getElementById(buttonSelector);
+        if(!card || !btn) return;
+        card.tabIndex = 0;
+        card.style.outline = 'none';
+        card.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            btn.click();
+          }
+        });
+        card.addEventListener('click', (e)=>{
+          if(e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a' || e.target.tagName.toLowerCase() === 'input') return;
+          btn.click();
+        });
+      }
+
+      // State
+      let state = loadData();
+
+      // Elements
+      const chooseStandard = $('#choose-standard');
+      const chooseVip = $('#choose-vip');
+      const vipCountEl = $('#vip-count');
+      const standardCountEl = $('#standard-count');
+      const vipBadge = $('#vip-count-badge');
+      const vipSpace = $('#vip-space');
+      const activity = $('#activity');
+      const modalRoot = $('#modal-root');
+      const openAdminBtn = $('#open-admin');
+      const openAdminBtn2 = $('#open-admin-2');
+      const clearStorageBtn = $('#clear-storage');
+
+      // Init keyboard friendly
+      makeCardKeyboardFriendly('standard-card', 'choose-standard');
+      makeCardKeyboardFriendly('vip-card', 'choose-vip');
+
+      // Toast system
+      let toastTimeout = null;
+      function showToast(msg, duration = 2400){
+        const existing = document.getElementById('__oss_toast');
+        if(existing) existing.remove();
+        const t = document.createElement('div');
+        t.id = '__oss_toast';
+        t.setAttribute('role','status');
+        t.setAttribute('aria-live','polite');
+        t.style.position = 'fixed';
+        t.style.right = '20px';
+        t.style.bottom = '20px';
+        t.style.background = 'linear-gradient(90deg, rgba(96,165,250,0.12), rgba(110,231,183,0.08))';
+        t.style.padding = '12px 16px';
+        t.style.borderRadius = '10px';
+        t.style.border = '1px solid rgba(255,255,255,0.04)';
+        t.style.backdropFilter = 'blur(6px)';
+        t.style.fontWeight = '700';
+        t.style.color = '#e8f9ff';
+        t.style.boxShadow = '0 10px 30px rgba(2,6,23,0.6)';
+        t.style.transition = 'opacity .25s';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        if(toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(()=> {
+          t.style.opacity = '0';
+          setTimeout(()=> t.remove(), 300);
+        }, duration);
+      }
+
+      // Render counts / sold-out logic
+      function renderCounts(){
+        const vipCount = state.vip.length;
+        const stdCount = state.standard.length;
+        vipCountEl.textContent = `${vipCount} / ${VIP_LIMIT}`;
+        vipBadge.textContent = `VIP ${vipCount}/${VIP_LIMIT}`;
+        standardCountEl.textContent = stdCount;
+        if(vipCount >= VIP_LIMIT){
+          if(chooseVip){
+            chooseVip.disabled = true;
+            chooseVip.textContent = 'SOLD OUT';
+            chooseVip.classList.remove('btn-primary');
+            chooseVip.classList.add('btn-ghost');
+          }
+          if(vipSpace) vipSpace.innerHTML = '<span class="soldout">SOLD OUT</span>';
+        } else {
+          if(chooseVip){
+            chooseVip.disabled = false;
+            chooseVip.textContent = 'Select VIP';
+            if(!chooseVip.classList.contains('btn-primary')) chooseVip.classList.add('btn-primary');
+          }
+          if(vipSpace) vipSpace.textContent = 'Limited — 10 seats';
+        }
+        // activity
+        const total = state.vip.length + state.standard.length;
+        if(total === 0){
+          activity.textContent = 'No bookings yet.';
+        } else {
+          const all = state.vip.concat(state.standard);
+          all.sort((a,b) => new Date(b.time) - new Date(a.time));
+          const last = all[0];
+          activity.textContent = `${last.roleplay} reserved ${last.type.toUpperCase()} on ${new Date(last.time).toLocaleString()}`;
+        }
+      }
+
+      // Generic modal builder
+      function createModal(innerHtml, options = {}){
+        // remove any existing modal backdrop (we keep single-modal behaviour)
+        // but do NOT remove for other reasons; just append new one
+        const wrapper = document.createElement('div');
+        wrapper.className = 'modal-backdrop';
+        wrapper.innerHTML = innerHtml;
+        // backdrop click to close only if option set
+        wrapper.addEventListener('click', (e) => {
+          if(e.target === wrapper && options.backdropClose){
+            wrapper.remove();
+          }
+        });
+        modalRoot.appendChild(wrapper);
+
+        // find X button and wire up close
+        const xBtn = wrapper.querySelector('.modal-close-x');
+        if(xBtn){
+          xBtn.addEventListener('click', ()=> wrapper.remove());
+        }
+        // wire up any standard close button by id if exists
+        const closeButtons = wrapper.querySelectorAll('#close-modal, #close-admin, #close-adminpanel');
+        closeButtons.forEach(btn => btn.addEventListener('click', ()=> wrapper.remove()));
+
+        // focus first focusable element for accessibility
+        setTimeout(()=>{
+          const first = wrapper.querySelector('input, button, [tabindex="0"]');
+          if(first) first.focus();
+        },40);
+
+        return wrapper;
+      }
+
+      // Open booking form
+      function openFormModal(ticketType){
+        if(ticketType.toLowerCase() === 'vip' && state.vip.length >= VIP_LIMIT){
+          renderCounts();
+          showToast('VIP is sold out.');
+          return;
+        }
+        if(!withTempDisable(ticketType === 'VIP' ? chooseVip : chooseStandard)) return;
+
+        const modalHtml = `
+          <div class="modal" role="dialog" aria-modal="true" aria-label="Book ${ticketType}">
+            <button class="modal-close-x" aria-label="Close dialog">&times;</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div>
+                <h3 style="margin:0">${ticketType} booking</h3>
+                <div class="muted-note">Please enter your details below</div>
+              </div>
+              <button id="close-modal" class="btn btn-ghost">Close</button>
+            </div>
+
+            <div>
+              <div class="form-row">
+                <label>Roleplay Name</label>
+                <input id="roleplay" type="text" placeholder="e.g. CaptainSparrow" autocomplete="name" />
+              </div>
+              <div class="form-row">
+                <label>ROBLOX Username</label>
+                <input id="roblox" type="text" placeholder="Roblox username" autocomplete="username" />
+              </div>
+              <div class="form-row">
+                <label>Discord Username</label>
+                <input id="discord" type="text" placeholder="Username#1234" autocomplete="off" />
+              </div>
+
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+                <button id="cancel-book" class="btn btn-ghost">Cancel</button>
+                <button id="confirm-book" class="btn btn-primary">Confirm Booking</button>
+              </div>
+            </div>
+          </div>
+        `;
+        const modal = createModal(modalHtml, { backdropClose: false });
+
+        // Safely query the elements from the modal wrapper
+        const confirmButton = modal.querySelector('#confirm-book');
+        const cancelButton = modal.querySelector('#cancel-book');
+        const roleplayInput = modal.querySelector('#roleplay');
+        const robloxInput = modal.querySelector('#roblox');
+        const discordInput = modal.querySelector('#discord');
+
+        if(cancelButton) cancelButton.addEventListener('click', ()=> modal.remove());
+        // Enter -> submit support
+        [roleplayInput, robloxInput, discordInput].forEach(inp => {
+          if(!inp) return;
+          inp.addEventListener('keydown', (e)=>{
+            if(e.key === 'Enter'){
+              e.preventDefault();
+              if(confirmButton) confirmButton.click();
+            }
+          });
+        });
+
+        if(confirmButton){
+          confirmButton.addEventListener('click', ()=>{
+            if(confirmButton.disabled) return;
+            if(!withTempDisable(confirmButton, 900)) return;
+
+            const roleplay = (roleplayInput && roleplayInput.value || '').trim();
+            const roblox = (robloxInput && robloxInput.value || '').trim();
+            const discord = (discordInput && discordInput.value || '').trim();
+
+            if(!roleplay || roleplay.length < 2){
+              alert('Please enter a valid Roleplay Name (at least 2 characters).');
+              if(roleplayInput) roleplayInput.focus();
+              return;
+            }
+            if(!roblox || roblox.length < 2){
+              alert('Please enter a valid ROBLOX username.');
+              if(robloxInput) robloxInput.focus();
+              return;
+            }
+            if(!discord || discord.length < 3){
+              alert('Please enter a valid Discord username.');
+              if(discordInput) discordInput.focus();
+              return;
+            }
+
+            if(ticketType.toLowerCase() === 'vip' && state.vip.length >= VIP_LIMIT){
+              alert('Sorry — VIP sold out.');
+              modal.remove();
+              renderCounts();
+              return;
+            }
+
+            const entry = {
+              roleplay, roblox, discord,
+              time: new Date().toISOString(),
+              type: ticketType.toLowerCase()
+            };
+
+            if(ticketType.toLowerCase() === 'vip'){
+              state.vip.push(entry);
+            } else {
+              state.standard.push(entry);
+            }
+            saveData(state);
+            renderCounts();
+            modal.remove();
+            showToast(`Booked ${ticketType} — ${roleplay}`);
+          });
+        }
+      }
+
+      // Admin login modal
+      function openAdminLogin(){
+        if(!withTempDisable(openAdminBtn, 700)) return;
+
+        const html = `
+          <div class="modal" role="dialog" aria-modal="true" aria-label="Admin login">
+            <button class="modal-close-x" aria-label="Close dialog">&times;</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div><h3 style="margin:0">Administrator Login</h3><div class="muted-note">Enter administrator credentials</div></div>
+              <button id="close-admin" class="btn btn-ghost">Close</button>
+            </div>
+
+            <div>
+              <div class="form-row"><label>Username</label><input id="admin-user" type="text" /></div>
+              <div class="form-row"><label>Password</label><input id="admin-pass" type="password" /></div>
+
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+                <button id="admin-cancel" class="btn btn-ghost">Cancel</button>
+                <button id="admin-login" class="btn btn-primary">Login</button>
+              </div>
+            </div>
+          </div>
+        `;
+        const modal = createModal(html, { backdropClose: false });
+
+        const closeBtn = modal.querySelector('#close-admin');
+        const cancelBtn = modal.querySelector('#admin-cancel');
+        const loginBtn = modal.querySelector('#admin-login');
+        const userInput = modal.querySelector('#admin-user');
+        const passInput = modal.querySelector('#admin-pass');
+
+        if(closeBtn) closeBtn.addEventListener('click', ()=> modal.remove());
+        if(cancelBtn) cancelBtn.addEventListener('click', ()=> modal.remove());
+        if(passInput){
+          passInput.addEventListener('keydown', (e)=>{
+            if(e.key === 'Enter' && loginBtn) loginBtn.click();
+          });
+        }
+        if(loginBtn){
+          loginBtn.addEventListener('click', ()=>{
+            if(loginBtn.disabled) return;
+            if(!withTempDisable(loginBtn, 800)) return;
+            const u = (userInput && userInput.value || '').trim();
+            const p = (passInput && passInput.value) || '';
+            if(u === ADMIN_USER && p === ADMIN_PASS){
+              modal.remove();
+              window.__oss_admin_session = { user: u, loggedAt: new Date().toISOString() };
+              openAdminPanel();
+            } else {
+              alert('Invalid admin credentials.');
+            }
+          });
+        }
+      }
+
+      // Admin panel modal
+      function openAdminPanel(){
+        const html = `
+          <div class="modal" role="dialog" aria-modal="true" aria-label="Admin panel" style="max-width:760px">
+            <button class="modal-close-x" aria-label="Close dialog">&times;</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div><h3 style="margin:0">Admin — Ticket Lists</h3><div class="muted-note">Viewing stored reservations</div></div>
+              <div>
+                <button id="export-csv" class="btn btn-ghost">Export CSV</button>
+                <button id="close-adminpanel" class="btn btn-ghost">Close</button>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px">
+              <div style="min-width:160px">
+                <div class="tabs" id="admin-tabs">
+                  <div class="tab active" data-tab="standard">Standard (${state.standard.length})</div>
+                  <div class="tab" data-tab="vip">VIP (${state.vip.length})</div>
+                </div>
+                <div class="muted-note" style="margin-top:6px">Click an entry to copy details</div>
+              </div>
+
+              <div style="flex:1">
+                <div id="admin-list-wrap"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        const modal = createModal(html, { backdropClose: false });
+
+        const closeBtn = modal.querySelector('#close-adminpanel');
+        const exportBtn = modal.querySelector('#export-csv');
+        const tabs = Array.from(modal.querySelectorAll('.tab'));
+        const wrap = modal.querySelector('#admin-list-wrap');
+
+        if(closeBtn) closeBtn.addEventListener('click', ()=> modal.remove());
+
+        function renderAdminTab(which){
+          const arr = which === 'vip' ? state.vip : state.standard;
+          wrap.innerHTML = '';
+          if(arr.length === 0){
+            wrap.innerHTML = '<div class="muted-note">No entries yet.</div>';
+            return;
+          }
+          const ul = document.createElement('ul');
+          ul.className = 'list';
+          arr.slice().reverse().forEach((e) => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+              <div style="display:flex;justify-content:space-between;align-items:start;gap:12px">
+                <div>
+                  <div style="font-weight:800">${e.roleplay}</div>
+                  <div class="meta">ROBLOX: ${e.roblox} • Discord: ${e.discord}</div>
+                  <div class="meta" style="margin-top:6px;font-size:12px;color:var(--muted)">Booked: ${new Date(e.time).toLocaleString()}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+                  <button class="btn btn-ghost copy-btn" data-time="${e.time}">Copy</button>
+                  <button class="btn btn-ghost remove-btn" data-time="${e.time}">Remove</button>
+                </div>
+              </div>
+            `;
+            // copy
+            li.querySelector('.copy-btn').addEventListener('click', async ()=>{
+              const text = `Type: ${which.toUpperCase()} — ${formatEntry(e)}`;
+              try{
+                await navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard');
+              }catch(err){
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                showToast('Copied to clipboard');
+              }
+            });
+            // remove
+            li.querySelector('.remove-btn').addEventListener('click', ()=>{
+              if(!confirm('Remove this booking?')) return;
+              const arrRef = which === 'vip' ? state.vip : state.standard;
+              const idxOriginal = arrRef.findIndex(x => x.time === e.time && x.roleplay === e.roleplay);
+              if(idxOriginal >= 0){
+                arrRef.splice(idxOriginal, 1);
+                saveData(state);
+                renderCounts();
+                renderAdminTab(which);
+                showToast('Removed entry.');
+              } else {
+                alert('Could not find entry to remove.');
+              }
+            });
+
+            ul.appendChild(li);
+          });
+          wrap.appendChild(ul);
+        }
+
+        tabs.forEach(t => {
+          t.addEventListener('click', ()=>{
+            tabs.forEach(x=>x.classList.remove('active'));
+            t.classList.add('active');
+            renderAdminTab(t.dataset.tab);
+          });
+        });
+
+        renderAdminTab('standard');
+
+        if(exportBtn){
+          exportBtn.addEventListener('click', ()=>{
+            const rows = [
+              ['type', 'roleplay', 'roblox', 'discord', 'time'],
+              ...state.standard.map(s => ['standard', s.roleplay, s.roblox, s.discord, s.time]),
+              ...state.vip.map(s => ['vip', s.roleplay, s.roblox, s.discord, s.time])
+            ];
+            const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'oss_tickets_export.csv'; a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported CSV');
+          });
+        }
+      }
+
+      // Reset storage
+      if(clearStorageBtn) clearStorageBtn.addEventListener('click', ()=>{
+        if(!confirm('Clear all stored tickets? This cannot be undone.')) return;
+        state = { vip: [], standard: [] };
+        saveData(state);
+        renderCounts();
+        showToast('Data reset.');
+      });
+
+      // Click handlers for ticket buttons (safely attach only if elements exist)
+      if(chooseStandard) chooseStandard.addEventListener('click', ()=> openFormModal('Standard'));
+      if(chooseVip) chooseVip.addEventListener('click', ()=> openFormModal('VIP'));
+
+      // Admin open
+      if(openAdminBtn) openAdminBtn.addEventListener('click', openAdminLogin);
+      if(openAdminBtn2) openAdminBtn2.addEventListener('click', openAdminLogin);
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e)=>{
+        const active = document.activeElement;
+        const typingTags = ['INPUT','TEXTAREA','SELECT'];
+        if(typingTags.includes(active.tagName)) return;
+        if(e.key.toLowerCase() === 'a' && (e.ctrlKey || e.metaKey) === false){
+          if(openAdminBtn) openAdminBtn.click();
+        }
+      });
+
+      // initial render and storage init
+      if(!localStorage.getItem(STORAGE_KEY)) saveData(state);
+      renderCounts();
+
+      // Make sure buttons report as clickable for screen readers
+      $$('button').forEach(b => {
+        if(!b.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed','false');
+        b.addEventListener('focus', ()=> b.style.boxShadow = '0 8px 20px rgba(60,120,180,0.08)');
+        b.addEventListener('blur', ()=> b.style.boxShadow = '');
+      });
+    });
+  </script>
+</body>
+</html>
